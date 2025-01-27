@@ -1,15 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>replit</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Game</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  Hello world
+  <h1>Memory Game</h1>
+  <div class="options">
+    <div>
+      <label for="difficulty">Difficulty:</label>
+      <select id="difficulty">
+        <option value="2">Easy (2x2)</option>
+        <option value="4">Medium (4x4)</option>
+        <option value="6">Hard (6x6)</option>
+      </select>
+    </div>
+    <div>
+      <label for="color-theme">Color Theme:</label>
+      <select id="color-theme">
+        <option value="black" selected>Black</option>
+        <option value="blue">Blue</option>
+        <option value="green">Green</option>
+      </select>
+    </div>
+    <button id="new-game" class="btn">New Game</button>
+  </div>
+  <p>Flip the cards to find matching pairs. Complete the game with the fewest moves possible!</p>
+  <div id="game-board" class="grid-container"></div>
+  <div class="status">
+    <p id="moves">Moves: 0</p>
+    <p id="timer">Time: 0m 0s</p>
+  </div>
+  <p id="game-over" style="display:none;">Game Over!</p>
   <script src="script.js"></script>
 </body>
 
