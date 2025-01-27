@@ -5,8 +5,6 @@ body {
   align-items: center;
   height: 100vh;
   margin: 0;
-  background-color: white;
-  /* External background */
 }
 
 .options {
@@ -42,7 +40,6 @@ select:hover,
 
 .grid-2x2 {
   width: 240px;
-  /* 2 cards * 100px + 2 gaps * 10px */
 }
 
 .grid-4x4,

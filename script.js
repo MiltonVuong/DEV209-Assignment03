@@ -24,7 +24,6 @@ function resetGame() {
     gameBoard.innerHTML = '';
     gameBoard.style.gridTemplateColumns = `repeat(${difficulty}, 1fr)`;
 
-    // Add the appropriate class based on the selected difficulty
     gameBoard.className = 'grid-container';
     if (difficulty === 2) {
         gameBoard.classList.add('grid-2x2');
@@ -59,7 +58,7 @@ function updateColorTheme() {
     document.body.classList.add(themeColorClass);
 
     if (!colorThemeSelect.value) {
-        document.body.className = 'black'; // Default to black if no value is selected
+        document.body.className = 'black';
     }
 }
 
@@ -140,5 +139,4 @@ function checkGameOver() {
     }
 }
 
-// Initialize the game
 resetGame();
