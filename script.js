@@ -18,23 +18,43 @@ colorThemeSelect.addEventListener('change', updateColorTheme);
 newGameButton.addEventListener('click', resetGame);
 gameBoard.addEventListener('click', startTimerOnce);
 window.addEventListener('storage', syncMovesAcrossWindows);
+window.addEventListener('beforeunload', handleWindowClose);
 
 document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('selectedTheme') || 'blue';
+    incrementInstanceCounter();
+    const savedTheme = sessionStorage.getItem('selectedTheme') || 'blue';
     colorThemeSelect.value = savedTheme;
     updateColorTheme();
 
-    const savedDifficulty = localStorage.getItem('selectedDifficulty') || 2; // Load saved difficulty
+    const savedDifficulty = sessionStorage.getItem('selectedDifficulty') || 2; // Load saved difficulty
     difficultySelect.value = savedDifficulty;
     loadState();
     if (!startTime) resetGame();
 });
 
+function incrementInstanceCounter() {
+    const instanceCount = parseInt(localStorage.getItem('instanceCount'), 10) || 0;
+    localStorage.setItem('instanceCount', instanceCount + 1);
+}
+
+function decrementInstanceCounter() {
+    const instanceCount = parseInt(localStorage.getItem('instanceCount'), 10) || 0;
+    if (instanceCount > 0) {
+        localStorage.setItem('instanceCount', instanceCount - 1);
+    }
+}
+
+function handleWindowClose() {
+    decrementInstanceCounter();
+    const instanceCount = parseInt(localStorage.getItem('instanceCount'), 10) || 0;
+    if (instanceCount === 0) {
+        localStorage.removeItem('moves');
+    }
+}
 
 function saveState() {
     const gameState = {
         difficulty,
-        moves,
         elapsedTime: Date.now() - startTime,
         shuffledCards: [...gameBoard.children].map(card => ({
             value: card.dataset.value,
@@ -43,14 +63,15 @@ function saveState() {
         })),
         selectedCards: selectedCards.map(card => card.dataset.value)
     };
-    localStorage.setItem('gameState', JSON.stringify(gameState));
+    sessionStorage.setItem('gameState', JSON.stringify(gameState));
+    localStorage.setItem('moves', moves);
 }
 
 function loadState() {
-    const savedState = JSON.parse(localStorage.getItem('gameState'));
+    const savedState = JSON.parse(sessionStorage.getItem('gameState'));
     if (savedState && savedState.shuffledCards) {
         difficulty = savedState.difficulty;
-        moves = savedState.moves;
+        moves = parseInt(localStorage.getItem('moves'), 10) || 0;
         startTime = Date.now() - savedState.elapsedTime;
         shuffledCards = savedState.shuffledCards.map(cardData => {
             const cardElement = document.createElement('div');
@@ -73,10 +94,9 @@ function loadState() {
     }
 }
 
-
 function resetGame() {
     difficulty = parseInt(difficultySelect.value);
-    localStorage.setItem('selectedDifficulty', difficulty); // Save selected difficulty
+    sessionStorage.setItem('selectedDifficulty', difficulty); // Save selected difficulty
     shuffledCards = shuffle(generateCards(difficulty));
     gameBoard.innerHTML = '';
     gameBoard.style.gridTemplateColumns = `repeat(${difficulty}, 1fr)`;
@@ -91,8 +111,6 @@ function resetGame() {
         gameBoard.appendChild(cardElement);
     });
 
-    moves = 0;
-    movesElement.textContent = 'Moves: 0';
     clearInterval(timer);
     timerElement.textContent = 'Time: 0m 0s';
     startTime = null;
@@ -102,11 +120,10 @@ function resetGame() {
     saveState();
 }
 
-
 function updateColorTheme() {
     const theme = colorThemeSelect.value;
     document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('selectedTheme', theme);
+    sessionStorage.setItem('selectedTheme', theme);
 
     const themeColorClass = `theme-color-${theme}`;
     document.body.classList.remove('theme-color-blue', 'theme-color-green', 'theme-color-purple');
@@ -158,7 +175,6 @@ function flipCard(event) {
     }
 }
 
-
 function checkMatch() {
     const [card1, card2] = selectedCards;
     if (card1.dataset.value === card2.dataset.value) {
@@ -192,10 +208,11 @@ function checkGameOver() {
     if (matchedCards.length === shuffledCards.length) {
         clearInterval(timer);
         gameOverElement.style.display = 'block';
-        localStorage.removeItem('gameState'); // Clear the state when the game is over
-        localStorage.removeItem('moves');
+        sessionStorage.removeItem('gameState'); // Clear the state when the game is over
+        // Do not remove moves from localStorage
     }
 }
+
 
 function syncMovesAcrossWindows(event) {
     if (event.key === 'moves') {
