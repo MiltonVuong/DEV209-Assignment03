@@ -17,21 +17,71 @@ difficultySelect.addEventListener('change', resetGame);
 colorThemeSelect.addEventListener('change', updateColorTheme);
 newGameButton.addEventListener('click', resetGame);
 gameBoard.addEventListener('click', startTimerOnce);
+window.addEventListener('storage', syncMovesAcrossWindows);
+
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('selectedTheme') || 'blue';
+    colorThemeSelect.value = savedTheme;
+    updateColorTheme();
+
+    const savedDifficulty = localStorage.getItem('selectedDifficulty') || 2; // Load saved difficulty
+    difficultySelect.value = savedDifficulty;
+    loadState();
+    if (!startTime) resetGame();
+});
+
+
+function saveState() {
+    const gameState = {
+        difficulty,
+        moves,
+        elapsedTime: Date.now() - startTime,
+        shuffledCards: [...gameBoard.children].map(card => ({
+            value: card.dataset.value,
+            classList: [...card.classList],
+            textContent: card.textContent,
+        })),
+        selectedCards: selectedCards.map(card => card.dataset.value)
+    };
+    localStorage.setItem('gameState', JSON.stringify(gameState));
+}
+
+function loadState() {
+    const savedState = JSON.parse(localStorage.getItem('gameState'));
+    if (savedState && savedState.shuffledCards) {
+        difficulty = savedState.difficulty;
+        moves = savedState.moves;
+        startTime = Date.now() - savedState.elapsedTime;
+        shuffledCards = savedState.shuffledCards.map(cardData => {
+            const cardElement = document.createElement('div');
+            cardElement.classList.add('card', ...cardData.classList);
+            cardElement.dataset.value = cardData.value;
+            cardElement.textContent = cardData.textContent;
+            cardElement.addEventListener('click', flipCard);
+            return cardElement;
+        });
+        selectedCards = savedState.selectedCards.map(value => {
+            return shuffledCards.find(card => card.dataset.value === value);
+        });
+        gameBoard.innerHTML = '';
+        gameBoard.style.gridTemplateColumns = `repeat(${difficulty}, 1fr)`;
+        gameBoard.className = `grid-container grid-${difficulty}x${difficulty}`;
+        shuffledCards.forEach(card => gameBoard.appendChild(card));
+        movesElement.textContent = `Moves: ${moves}`;
+        timer = setInterval(updateTimer, 1000);
+        gameOverElement.style.display = 'none';
+    }
+}
+
 
 function resetGame() {
     difficulty = parseInt(difficultySelect.value);
+    localStorage.setItem('selectedDifficulty', difficulty); // Save selected difficulty
     shuffledCards = shuffle(generateCards(difficulty));
     gameBoard.innerHTML = '';
     gameBoard.style.gridTemplateColumns = `repeat(${difficulty}, 1fr)`;
 
-    gameBoard.className = 'grid-container';
-    if (difficulty === 2) {
-        gameBoard.classList.add('grid-2x2');
-    } else if (difficulty === 4) {
-        gameBoard.classList.add('grid-4x4');
-    } else if (difficulty === 6) {
-        gameBoard.classList.add('grid-6x6');
-    }
+    gameBoard.className = `grid-container grid-${difficulty}x${difficulty}`;
 
     shuffledCards.forEach(card => {
         const cardElement = document.createElement('div');
@@ -40,6 +90,7 @@ function resetGame() {
         cardElement.addEventListener('click', flipCard);
         gameBoard.appendChild(cardElement);
     });
+
     moves = 0;
     movesElement.textContent = 'Moves: 0';
     clearInterval(timer);
@@ -48,18 +99,18 @@ function resetGame() {
     gameOverElement.style.display = 'none';
     gameBoard.addEventListener('click', startTimerOnce);
     updateColorTheme();
+    saveState();
 }
 
+
 function updateColorTheme() {
-    document.body.className = colorThemeSelect.value;
+    const theme = colorThemeSelect.value;
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('selectedTheme', theme);
 
-    const themeColorClass = `theme-color-${colorThemeSelect.value}`;
-    document.body.classList.remove('theme-color-blue', 'theme-color-green', 'theme-color-black');
+    const themeColorClass = `theme-color-${theme}`;
+    document.body.classList.remove('theme-color-blue', 'theme-color-green', 'theme-color-purple');
     document.body.classList.add(themeColorClass);
-
-    if (!colorThemeSelect.value) {
-        document.body.className = 'black';
-    }
 }
 
 function startTimerOnce() {
@@ -71,10 +122,11 @@ function startTimerOnce() {
 }
 
 function updateTimer() {
-    const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-    const minutes = Math.floor(elapsedTime / 60);
-    const seconds = elapsedTime % 60;
+    const elapsedTime = Date.now() - startTime;
+    const minutes = Math.floor(elapsedTime / 60000);
+    const seconds = Math.floor((elapsedTime % 60000) / 1000);
     timerElement.textContent = `Time: ${minutes}m ${seconds}s`;
+    saveState();
 }
 
 function shuffle(array) {
@@ -98,12 +150,14 @@ function flipCard(event) {
         cardElement.classList.add('shown');
         cardElement.textContent = cardElement.dataset.value;
         selectedCards.push(cardElement);
+        saveState(); // Save state whenever a card is flipped
 
         if (selectedCards.length === 2) {
             checkMatch();
         }
     }
 }
+
 
 function checkMatch() {
     const [card1, card2] = selectedCards;
@@ -129,6 +183,8 @@ function checkMatch() {
 function updateMoves() {
     moves++;
     movesElement.textContent = `Moves: ${moves}`;
+    saveState();
+    localStorage.setItem('moves', moves);
 }
 
 function checkGameOver() {
@@ -136,7 +192,14 @@ function checkGameOver() {
     if (matchedCards.length === shuffledCards.length) {
         clearInterval(timer);
         gameOverElement.style.display = 'block';
+        localStorage.removeItem('gameState'); // Clear the state when the game is over
+        localStorage.removeItem('moves');
     }
 }
 
-resetGame();
+function syncMovesAcrossWindows(event) {
+    if (event.key === 'moves') {
+        moves = parseInt(localStorage.getItem('moves'), 10) || 0;
+        movesElement.textContent = `Moves: ${moves}`;
+    }
+}

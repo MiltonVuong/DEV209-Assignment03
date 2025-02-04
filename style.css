@@ -1,3 +1,9 @@
+:root {
+  --primary-color: #333;
+  --primary-color-hover: #555;
+  --matched-color: #555;
+}
+
 body {
   display: flex;
   flex-direction: column;
@@ -7,7 +13,8 @@ body {
   margin: 0;
 }
 
-.options {
+.options,
+.status {
   display: flex;
   justify-content: center;
   gap: 20px;
@@ -20,97 +27,60 @@ select,
   font-size: 16px;
   cursor: pointer;
   border: none;
-  background-color: #333;
-  color: #fff;
   border-radius: 5px;
   margin-top: 10px;
+  background-color: var(--primary-color);
+  color: #fff;
 }
 
 select:hover,
 .btn:hover {
-  background-color: #555;
+  background-color: var(--primary-color-hover);
 }
 
 .grid-container {
   display: grid;
   gap: 10px;
   margin: 20px 0;
-  width: auto;
-}
-
-.grid-2x2 {
-  width: 240px;
-}
-
-.grid-4x4,
-.grid-6x6 {
-  width: auto;
 }
 
 .card {
   width: 100px;
   height: 100px;
-  background-color: grey;
   cursor: pointer;
   text-align: center;
   line-height: 100px;
   font-size: 24px;
   color: #fff;
-}
-
-.hidden {
   background-color: black;
 }
 
-.matched {
-  background-color: #2ecc71;
+.card.hidden {
+  background-color: var(--primary-color);
 }
 
-.blue .card,
-.theme-color-blue .btn,
-.theme-color-blue select {
-  background-color: blue;
+.card.shown {
+  color: white;
 }
 
-.green .card,
-.theme-color-green .btn,
-.theme-color-green select {
-  background-color: green;
+.card.matched {
+  background-color: var(--matched-color);
 }
 
-.black .card,
-.theme-color-black .btn,
-.theme-color-black select {
-  background-color: black;
+.theme-color-blue {
+  --primary-color: blue;
 }
 
-.theme-color-blue h1,
-.theme-color-blue p,
-.theme-color-blue label {
-  color: blue;
+.theme-color-green {
+  --primary-color: green;
 }
 
-.theme-color-green h1,
-.theme-color-green p,
-.theme-color-green label {
-  color: green;
-}
-
-.theme-color-black h1,
-.theme-color-black p,
-.theme-color-black label {
-  color: black;
+.theme-color-purple {
+  --primary-color: purple;
 }
 
 h1,
 div,
 p {
   text-align: center;
-}
-
-.status {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  margin-top: 10px;
 }
