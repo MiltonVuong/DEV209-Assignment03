@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameOverElement = document.getElementById('game-over');
 
     let timer;
-    let moves = 0;
+    let moves = parseInt(sessionStorage.getItem('moves'), 10) || 0;
     let totalMoves = parseInt(localStorage.getItem('totalMoves'), 10) || 0;
     let startTime;
     let shuffledCards = [];
@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     colorThemeSelect.addEventListener('change', updateColorTheme);
     newGameButton.addEventListener('click', resetGame);
     gameBoard.addEventListener('click', startTimerOnce);
-    window.addEventListener('storage', syncMovesAcrossWindows);
     window.addEventListener('beforeunload', handleWindowClose);
 
     incrementInstanceCounter();
@@ -44,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         decrementInstanceCounter();
         const instanceCount = parseInt(localStorage.getItem('instanceCount'), 10) || 0;
         if (instanceCount === 0) {
-            localStorage.removeItem('moves');
             localStorage.removeItem('totalMoves');
         }
     }
@@ -61,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedCards: selectedCards.map(card => card.dataset.value)
         };
         sessionStorage.setItem('gameState', JSON.stringify(gameState));
-        localStorage.setItem('moves', moves);
+        sessionStorage.setItem('moves', moves);
         localStorage.setItem('totalMoves', totalMoves);
     }
 
@@ -69,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedState = JSON.parse(sessionStorage.getItem('gameState'));
         if (savedState && savedState.shuffledCards) {
             difficulty = savedState.difficulty;
-            moves = parseInt(localStorage.getItem('moves'), 10) || 0;
+            moves = parseInt(sessionStorage.getItem('moves'), 10) || 0;
             startTime = Date.now() - savedState.elapsedTime;
             shuffledCards = savedState.shuffledCards.map(cardData => {
                 const cardElement = document.createElement('div');
@@ -198,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         movesElement.textContent = `Moves: ${moves}`;
         totalMovesElement.textContent = `Total Moves: ${totalMoves}`;
         saveState();
-        localStorage.setItem('moves', moves);
+        sessionStorage.setItem('moves', moves);
         localStorage.setItem('totalMoves', totalMoves);
     }
 
@@ -208,17 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(timer);
             gameOverElement.style.display = 'block';
             sessionStorage.removeItem('gameState');
-        }
-    }
-
-    function syncMovesAcrossWindows(event) {
-        if (event.key === 'moves') {
-            moves = parseInt(localStorage.getItem('moves'), 10) || 0;
-            movesElement.textContent = `Moves: ${moves}`;
-        }
-        if (event.key === 'totalMoves') {
-            totalMoves = parseInt(localStorage.getItem('totalMoves'), 10) || 0;
-            totalMovesElement.textContent = `Total Moves: ${totalMoves}`;
         }
     }
 
